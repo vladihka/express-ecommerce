@@ -6,7 +6,24 @@ const connectDB = require("./config/db");
 connectDB();
 
 const app = express();
-app.use(cors({ origin: "http://localhost:3000" })); // Разрешаем запросы с фронтенда
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://express-ecommerce-ruddy.vercel.app"
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // разрешаем запросы без origin (Postman, server-to-server)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+}));
 app.use(express.json());
 
 // Тест
