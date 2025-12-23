@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import GoogleButton from "../components/GoogleButton";
 
 export default function Home() {
   return (
@@ -11,6 +12,7 @@ export default function Home() {
       <Link href="/login">
         <button>Login</button>
       </Link>
+      <GoogleButton></GoogleButton>
     </div>
   );
 }

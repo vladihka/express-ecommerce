@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import GoogleButton from "../../components/GoogleButton";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -54,6 +55,7 @@ export default function AdminLoginPage() {
       />
       <button onClick={login}>Login</button>
       {error && <p style={{ color: "red" }}>{error}</p>}
+      <GoogleButton></GoogleButton>
     </div>
   );
 }
