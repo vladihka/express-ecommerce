@@ -1,7 +1,8 @@
-'use client';
+"use client";
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import LogoutButton from "../../components/LogoutButton";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -14,11 +15,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   useEffect(() => {
     setIsClient(true); // убедились, что на клиенте
-    const t = localStorage.getItem("token");
-    if (!t) {
+    const token = localStorage.getItem("token");
+    if (!token) {
       router.push("/login"); // если токена нет → редирект
     } else {
-      setToken(t); // токен есть → показываем страницу
+      setToken(token); // токен есть → показываем страницу
     }
   }, []);
 
@@ -30,14 +31,19 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         <h2>Admin Panel</h2>
         <nav>
           <ul style={{ listStyle: "none", padding: 0 }}>
-            <li><Link href="/admin">Главная</Link></li>
-            <li><Link href="/admin/categories">Категории</Link></li>
+            <li>
+              <Link href="/admin">Главная</Link>
+            </li>
+            <li>
+              <Link href="/admin/categories">Категории</Link>
+            </li>
+            <li>
+              <LogoutButton></LogoutButton>
+            </li>
           </ul>
         </nav>
       </aside>
-      <main style={{ flex: 1, padding: "20px" }}>
-        {children}
-      </main>
+      <main style={{ flex: 1, padding: "20px" }}>{children}</main>
     </div>
   );
 }
