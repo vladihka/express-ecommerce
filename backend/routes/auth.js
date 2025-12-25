@@ -57,23 +57,23 @@ router.post("/register", async (req, res) => {
  * email + password
  */
 router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ message: "Email and password required" });
-    }
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password required" });
+        }
 
-    const user = await User.findOne({ email });
+        const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(400).json({ message: "Invalid email or password" });
-    }
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
 
-    if (user.provider !== "local") {
-      return res.status(400).json({
-        message: "Use Google login for this account",
-      });
+        if (user.provider !== "local") {
+            return res.status(400).json({
+            message: "Use Google login for this account",
+        });
     }
 
     if (!user.passwordHash) {
@@ -109,40 +109,55 @@ router.post("/login", async (req, res) => {
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 router.post("/google", async (req, res) => {
-  try {
-    const { credential } = req.body;
+    try {
+        const { credential } = req.body;
 
-    const ticket = await client.verifyIdToken({
-      idToken: credential,
-      audience: process.env.GOOGLE_CLIENT_ID,
-    });
+        if (!credential) {
+            return res.status(400).json({ message: "Credential is required" });
+        }
 
-    const payload = ticket.getPayload();
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
 
-    const { sub, email } = payload;
+        const payload = ticket.getPayload();
 
-    let user = await User.findOne({ email });
+        const { sub, email } = payload;
 
-    if (!user) {
-      user = await User.create({
-        email,
-        provider: "google",
-        googleId: sub,
-      });
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            user = await User.create({
+            email,
+            provider: "google",
+            googleId: sub,
+            role: "user",
+        });
     }
 
     const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "7d" }
     );
 
-    res.json({ token });
+    res.json({ token, user: { id: user._id, email: user.email, role: user.role } });
   } catch (err) {
-    console.error(err);
+    console.error("GOOGLE AUTH ERROR:", err);
     res.status(401).json({ message: "Google auth failed" });
   }
 });
 
+const authMiddleware = require("../middlewares/authMiddleware");
+
+router.get("/me", authMiddleware, async (req, res) => {
+    res.json({
+      id: req.user._id,
+      email: req.user.email,
+      role: req.user.role,
+      provider: req.user.provider,
+    });
+});
 
 module.exports = router;

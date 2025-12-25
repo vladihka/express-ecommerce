@@ -3,6 +3,7 @@
 import { GoogleLogin } from "@react-oauth/google";
 import api from "../lib/api";
 import { useRouter } from "next/navigation";
+import { saveToken } from "../lib/auth";
 
 export default function GoogleButton() {
   const router = useRouter();
@@ -15,13 +16,11 @@ export default function GoogleButton() {
             credential: credentialResponse.credential,
           });
 
-          // ✅ ВАЖНО
-          localStorage.setItem("token", res.data.token);
+          const { token } = res.data;
 
-          // можешь сохранить юзера если хочешь
-          // localStorage.setItem("user", JSON.stringify(res.data.user));
+          saveToken(token);
 
-          router.push("/admin"); // или куда тебе нужно
+          router.push("/admin");
         } catch (err) {
           console.error("GOOGLE LOGIN ERROR", err);
         }

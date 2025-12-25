@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import LogoutButton from "../../components/LogoutButton";
+import { logout } from "../../lib/auth";
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -10,20 +11,18 @@ interface AdminLayoutProps {
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
-  const [isClient, setIsClient] = useState(false);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsClient(true); // убедились, что на клиенте
     const token = localStorage.getItem("token");
     if (!token) {
-      router.push("/login"); // если токена нет → редирект
+      router.push("/login");
     } else {
-      setToken(token); // токен есть → показываем страницу
+      setToken(token);
     }
-  }, []);
+  }, [router]);
 
-  if (!isClient || !token) return null; // пока проверка не завершена → не рендерим
+  if (!token) return null;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
@@ -38,7 +37,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               <Link href="/admin/categories">Категории</Link>
             </li>
             <li>
-              <LogoutButton></LogoutButton>
+              <LogoutButton />
             </li>
           </ul>
         </nav>

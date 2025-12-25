@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { log } from "console";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { logout } from "../../../lib/auth";
 
 interface Property {
   name: string;
@@ -23,27 +23,25 @@ export default function AdminCategoriesPage() {
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
-  };
-
-  // Получаем токен из localStorage при загрузке страницы
+  // Получаем токен из localStorage
   useEffect(() => {
     const t = localStorage.getItem("token");
-    setToken(t);
+    if (!t) {
+      router.push("/login"); // редирект если нет токена
+    } else {
+      setToken(t);
+    }
   }, []);
 
-  // Загружаем категории, когда токен доступен
+  // Загружаем категории после установки токена
   useEffect(() => {
     if (token) fetchCategories();
   }, [token]);
 
-  
-
   const fetchCategories = async () => {
     if (!token) {
       logout();
+      router.push("/login");
       return;
     }
     try {
@@ -55,13 +53,16 @@ export default function AdminCategoriesPage() {
         const text = await res.text();
         console.error("Ошибка от сервера:", text);
         logout();
+        router.push("/login");
         return;
       }
 
       const data = await res.json();
       setCategories(data);
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка при загрузке категорий:", err);
+      logout();
+      router.push("/login");
     }
   };
 
@@ -75,11 +76,16 @@ export default function AdminCategoriesPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, parent: parent || undefined, properties: [] }),
+        body: JSON.stringify({
+          name,
+          parent: parent || undefined,
+          properties: [],
+        }),
       });
 
       if (!res.ok) {
-        console.error(await res.text());
+        const text = await res.text();
+        console.error("Ошибка при создании категории:", text);
         return;
       }
 
@@ -87,7 +93,7 @@ export default function AdminCategoriesPage() {
       setParent("");
       fetchCategories();
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка при создании категории:", err);
     }
   };
 
@@ -101,19 +107,28 @@ export default function AdminCategoriesPage() {
       });
 
       if (!res.ok) {
-        console.error(await res.text());
+        const text = await res.text();
+        console.error("Ошибка при удалении категории:", text);
         return;
       }
 
       fetchCategories();
     } catch (err) {
-      console.error(err);
+      console.error("Ошибка при удалении категории:", err);
     }
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      <button onClick={logout} style={{ marginBottom: "20px" }}>Выйти</button>
+      <button
+        onClick={() => {
+          logout();
+          router.push("/login");
+        }}
+        style={{ marginBottom: "20px" }}
+      >
+        Выйти
+      </button>
       <h1>Категории</h1>
 
       <div style={{ marginBottom: "20px" }}>
