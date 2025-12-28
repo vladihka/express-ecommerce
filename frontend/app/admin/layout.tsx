@@ -12,17 +12,44 @@ interface AdminLayoutProps {
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    const t = localStorage.getItem("token");
+    if (!t) {
+      logout();
       router.push("/login");
-    } else {
-      setToken(token);
+      return;
     }
+    setToken(t);
+
+    fetch("https://your-backend.com/auth/me", {
+      headers: { Authorization: `Bearer ${t}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user");
+        return res.json();
+      })
+      .then((data) => {
+        if (data.role !== "admin") {
+          setError("You are not an admin");
+          logout();
+          return;
+        }
+        setRole(data.role);
+      })
+      .catch(() => {
+        logout();
+        router.push("/login");
+      })
+      .finally(() => setLoading(false));
   }, [router]);
 
-  if (!token) return null;
+  if (loading) return <p>Loading...</p>;
+  if (error) return <p style={{ color: "red" }}>{error}</p>;
+  if (!role) return null;
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>

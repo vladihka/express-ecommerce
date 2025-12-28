@@ -23,17 +23,15 @@ export default function AdminCategoriesPage() {
   const [token, setToken] = useState<string | null>(null);
   const router = useRouter();
 
-  // Получаем токен из localStorage
   useEffect(() => {
     const t = localStorage.getItem("token");
     if (!t) {
-      router.push("/login"); // редирект если нет токена
+      router.push("/login");
     } else {
       setToken(t);
     }
   }, []);
 
-  // Загружаем категории после установки токена
   useEffect(() => {
     if (token) fetchCategories();
   }, [token]);
@@ -82,7 +80,6 @@ export default function AdminCategoriesPage() {
           properties: [],
         }),
       });
-
       if (!res.ok) {
         const text = await res.text();
         console.error("Ошибка при создании категории:", text);
